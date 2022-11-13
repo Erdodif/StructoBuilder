@@ -1,0 +1,51 @@
+{
+    "signature": "",
+    "renderStart": false,
+    "statements": [
+        {
+            "type": "normal",
+            "content": "Metszet,Mdb := [], 0"
+        },
+        {
+            "type": "loop",
+            "content": "i := 1..N",
+            "statements": [
+                {
+                    "type": "normal",
+                    "content": "j := 1"
+                },
+                {
+                    "type": "loop",
+                    "content": "j <= M és A[i] != B[i]",
+                    "statements": [
+                        {
+                            "type": "normal",
+                            "content": "j := j + 1"
+                        }
+                    ]
+                },
+                {
+                    "type": "if",
+                    "content": "j <= N",
+                    "blocks": [
+                        [
+                            {
+                                "type": "normal",
+                                "content": "Mdb := Mdb + 1"
+                            },
+                            {
+                                "type": "normal",
+                                "content": "Metszet[Mdb] := A[i]"
+                            }
+                        ],
+                        []
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "normal",
+            "content": "KI: Metszet, Mdb"
+        }
+    ]
+}
