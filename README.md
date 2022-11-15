@@ -2,7 +2,7 @@
 
 Structogram Controller library written in TypeScript.
 
-> This repository is here to support the Sructogram-Editor project which is an algorithm visualization method.
+> This repository is here to support the Sructogram-Editor project which is an algorithm visualization tool.
 
 ---
 
