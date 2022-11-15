@@ -11,17 +11,15 @@ import {
 
 describe("Statement fromJson tests", () => {
     it("blank should turn normally", () => {
-        console.log(Statement.fromJson(JSON.parse("{}")));
-        console.log(new Statement());
         assert.strictEqual(
             Statement.fromJson(JSON.parse('{}')).type(),
             new Statement().type(),
-            "Conversion error on blank Statement!"
+            "Cannot convert Empty Json properly!"
         );
         assert.strictEqual(
             Statement.fromJson(JSON.parse('{"type":"empty"}')).type(),
             new Statement().type(),
-            "Conversion error on blank Statement!"
+            "Conversion error on empty Statement-type!"
         );
     });
 
@@ -29,13 +27,13 @@ describe("Statement fromJson tests", () => {
         let json = JSON.parse('{"type":"normal","content":"F"}');
         assert.strictEqual(
             Statement.fromJson(json).content,
-            new Statement("F", StatementType.S_NORMAL).content,
-            "Conversion error on normal Statement!"
+            "F",
+            "Content mismatch on normal Statement!"
         );
         assert.strictEqual(
             Statement.fromJson(json).type(),
-            new Statement("F", StatementType.S_NORMAL).type(),
-            "Conversion error on normal Statement!"
+            StatementType.S_NORMAL,
+            "Type mismatch on normal Statement!"
         );
     });
 
@@ -44,32 +42,23 @@ describe("Statement fromJson tests", () => {
         let statement = IfStatement.fromJson(json)
         assert.strictEqual(
             statement.content,
-            new IfStatement("j <= N").content,
-            "Conversion error on if Statement!"
+            "j <= N",
+            "Content conversion Error on if Statement!"
         );
         assert.strictEqual(
             statement.type(),
-            new IfStatement("j <= N").type(),
-            "Conversion error on if Statement!"
+            StatementType.S_IF,
+            "Type mismatch on if Statement!"
         );
-        assert.strictEqual(
-            statement.content,
-            new IfStatement("j <= N").content,
-            "Conversion error on if Statement!"
-        );
-        let blocks :Statement[][] = [[
-            new Statement("Mdb := Mdb + 1",StatementType.S_NORMAL),
-            new Statement("Metszet[Mdb] := A[i]",StatementType.S_NORMAL)
-        ],[]];
         assert.strictEqual(
             statement.statementBlocks[0][0].type(),
-            new IfStatement("j <= N",blocks).statementBlocks[0][0].type(),
-            "Conversion error on if Statement!"
+            StatementType.S_NORMAL,
+            "Type mismatch on if Statement statement-blocks!"
         );
         assert.strictEqual(
             statement.statementBlocks[0][0].content,
-            new IfStatement("Mdb := Mdb + 1",blocks).statementBlocks[0][0].content,
-            "Conversion error on if Statement!"
+            "Mdb := Mdb + 1",
+            "Content mismatch on if Statement statement-blocks!"
         );
         assert.isEmpty(
             statement.statementBlocks[1],
@@ -105,37 +94,123 @@ describe("Statement fromJson tests", () => {
         let statement = SwitchStatement.fromJson(json);
         assert.strictEqual(
             statement.type(),
-            new SwitchStatement().type(),
-            "Conversion error on switch statement!"
+            StatementType.S_SWITCH,
+            "Type mismatch on switch statement!"
         );
         assert.strictEqual(
             statement.blocks[0].case,
             "A = 1",
-            "Conversion error on switch statement!"
+            "Content mismatch on switch statement case!"
         );
         assert.strictEqual(
             statement.blocks[1].statements[0].type(),
             StatementType.S_NORMAL,
-            "Conversion error on switch statement!"
+            "Conversion error on switch statement case-blocks!"
         );
         assert.strictEqual(
             statement.blocks[1].statements[1].content,
             "KI: A - 1",
-            "Conversion error on switch statement!"
+            "Conversion error on switch statement case-blocks!"
         );
     });
+
     it("loop should turn normally", () => {
-
-    });
-    it("loop-reverse should turn normally", () => {
-
+        let json = JSON.parse(`{
+            "type": "loop",
+            "content": "i := 1..N",
+            "statements": [
+                {
+                    "type": "normal",
+                    "content": "j := 1"
+                },
+                {
+                    "type": "loop-reverse",
+                    "content": "j <= M és A[i] != B[i]",
+                    "statements": [
+                        {
+                            "type": "normal",
+                            "content": "j := j + 1"
+                        }
+                    ]
+                },
+                {
+                    "type": "if",
+                    "content": "j <= N",
+                    "blocks": [
+                        [
+                            {
+                                "type": "normal",
+                                "content": "Mdb := Mdb + 1"
+                            },
+                            {
+                                "type": "normal",
+                                "content": "Metszet[Mdb] := A[i]"
+                            }
+                        ],
+                        []
+                    ]
+                }
+            ]
+        }`);
+        let statement = LoopStatement.fromJson(json);
+        assert.strictEqual(
+            statement.type(),
+            StatementType.S_LOOP,
+            "Type mismatch on loop statement!"
+        );
+        assert.strictEqual(
+            statement.content,
+            "i := 1..N", 
+            "Content mismatch error on loop statement!");
+        assert.strictEqual(
+            statement.statements[1].content,
+            "j <= M és A[i] != B[i]",
+            "Conversion error on loop statement!"
+        );
+        assert.strictEqual(
+            statement.statements[1].type(),
+            StatementType.S_LOOP_REVERSE,
+            "Type mismatch on loop statement block!"
+        );
+        assert.strictEqual(
+            (statement.statements[2] as IfStatement).statementBlocks[0][1].content,
+            "Metszet[Mdb] := A[i]",
+            "Conversion error on loop statement block!"
+        );
     });
 });
-/*
+
 describe("Statement Deserializer tests", () => {
-    it("should keep the type", () => {
-        assert.instanceOf(Deserializer.fromJson('{"type":"normal","content":"F"}'), Statement, "Type mismatch!");
-        assert.instanceOf(Deserializer.fromJson('{"type":"if","content":"F","blocks":[]}'), IfStatement, "Type mismatch!");
-        assert.instanceOf(Deserializer.fromJson('{"type":"switch","predicates":[],"blocks":[]}'), SwitchStatement, "Type mismatch!");
+    it("should give proper type", () => {
+        assert.instanceOf(
+            Deserializer.fromJsonString('{}'), 
+            Statement, 
+            "Type mismatch on empty conversion!"
+        );
+        assert.instanceOf(
+            Deserializer.fromJsonString('{"type":"normal","content":"F"}'), 
+            Statement, 
+            "Type mismatch on normal conversion!"
+        );
+        assert.instanceOf(
+            Deserializer.fromJsonString('{"type":"if","content":"F","blocks":[]}'), 
+            IfStatement, 
+            "Type mismatch on if conversion!"
+        );
+        assert.instanceOf(
+            Deserializer.fromJsonString('{"type":"switch","predicates":[],"blocks":[]}'), 
+            SwitchStatement, 
+            "Type mismatch on switch conversion!"
+        );
+        assert.instanceOf(
+            Deserializer.fromJsonString('{"type":"loop","statements":[{"type":"empty"}]}'), 
+            LoopStatement, 
+            "Type mismatch on loop conversion!"
+        );
+        assert.instanceOf(
+            Deserializer.fromJsonString('{"type":"loop-reverse","statements":[{"type":"empty"}]}'), 
+            ReversedLoopStatement, 
+            "Type mismatch reverse-loop conversion!"
+        );
     });
-});*/
+});
