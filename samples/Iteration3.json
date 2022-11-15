@@ -47,9 +47,33 @@
             "type":"switch",
             "blocks":[
                 {
-                    "case":"",
+                    "case":"A = 1",
                     "statements":[
-                    
+                        {
+                            "type":"normal",
+                            "content":"KI: A"
+                        }
+                    ]
+                },
+                {
+                    "case":"A = 2",
+                    "statements":[
+                        {
+                            "type":"normal",
+                            "content":"A := A - 1"
+                        },
+                        {
+                            "type":"normal",
+                            "content":"KI: A - 1"
+                        }
+                    ]
+                },
+                {
+                    "case":"else",
+                    "statements":[
+                        {
+                            "type":"empty"
+                        }
                     ]
                 }
             ]
