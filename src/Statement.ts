@@ -38,7 +38,18 @@ export class Statement {
     }
 
     static fromJson(json: any): Statement {
-        return new Statement(json.content ?? null, json.type ?? StatementType.S_BLANK);
+        let _content: string | null = json?.content ?? null;
+        let _type: StatementType;
+        if (json?.type != null) {
+            _type = json.type;
+        }
+        else if (_content == null) {
+            _type = StatementType.S_BLANK;
+        }
+        else {
+            _type = StatementType.S_NORMAL;
+        }
+        return new Statement(_content, _type);
     }
 }
 
@@ -62,7 +73,7 @@ export class IfStatement extends Statement {
             }
             statementBlocks.push(statements);
         }
-        return new IfStatement();
+        return new IfStatement(json?.content,statementBlocks);
     }
 }
 
