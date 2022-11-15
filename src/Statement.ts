@@ -1,5 +1,5 @@
 export class StatementDeSerializer {
-    static fromJson(json: any): Statement {
+    static fromJson(json: any): Statement | IfStatement | SwitchStatement | LoopStatement | ReversedLoopStatement {
         switch (json.type) {
             case "normal":
                 return Statement.fromJson(json);
@@ -14,6 +14,10 @@ export class StatementDeSerializer {
             default:
                 return new Statement();
         }
+    }
+
+    static fromJsonString(json: string): Statement | IfStatement | SwitchStatement | LoopStatement | ReversedLoopStatement {
+        return this.fromJson(JSON.parse(json));
     }
 
     static getStatementTypeFromString(type: string): StatementType {
@@ -45,7 +49,12 @@ export class Statement {
     constructor(content: string | null, type: StatementType);
     constructor(content: string | null = null, type: StatementType = StatementType.S_BLANK) {
         this.content = content;
-        this._type = type;
+        if (type === StatementType.S_BLANK && content !== null) {
+            this._type = StatementType.S_NORMAL;
+        }
+        else {
+            this._type = type;
+        }
     }
 
     toJSON() {
@@ -81,12 +90,17 @@ export class IfStatement extends Statement {
 
     static fromJson(json: I_IfStatement): IfStatement {
         let statementBlocks: Statement[][] = [];
-        for (const block of json.blocks) {
-            let statements: Statement[] = [];
-            for (const statement of block) {
-                statements.push(StatementDeSerializer.fromJson(statement));
+        for (let i = 0; i < 2; i++) {
+            if (i > (json?.blocks?.length - 1) ?? -1) {
+                statementBlocks.push([]);
             }
-            statementBlocks.push(statements);
+            else {
+                let statements: Statement[] = [];
+                for (const statement of json.blocks[i]) {
+                    statements.push(StatementDeSerializer.fromJson(statement));
+                }
+                statementBlocks.push(statements);
+            }
         }
         return new IfStatement(json.content, statementBlocks);
     }
@@ -115,6 +129,9 @@ export class SwitchStatement extends Statement {
             }
             blocks.push({ case: block.case, statements: statements });
         }
+        if (blocks.length < 2) {
+            blocks.push({ case: "else", statements: [] });
+        }
         return new SwitchStatement(blocks);
     }
 }
@@ -131,8 +148,8 @@ export class LoopStatement extends Statement {
         this.statements = statements;
     }
 
-    static fromJson(json: any): LoopStatement {
-        let statements: Statement[] = []
+    static fromJson(json: I_LoopStatement): LoopStatement {
+        let statements: Statement[] = [];
         for (const statement of json?.statements) {
             statements.push(StatementDeSerializer.fromJson(statement));
         }
@@ -149,8 +166,8 @@ export class ReversedLoopStatement extends LoopStatement {
         this._type = StatementType.S_LOOP_REVERSE;
     }
 
-    static fromJson(json: any): LoopStatement {
-        let statements: Statement[] = []
+    static fromJson(json: I_LoopStatement): LoopStatement {
+        let statements: Statement[] = [];
         for (const statement of json?.statements) {
             statements.push(StatementDeSerializer.fromJson(statement));
         }
