@@ -5,25 +5,51 @@
   "main": "dist/src/index.js",
   "type": "module",
   "scripts": {
-    "index":"tsc && node dist/src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "index": "tsc && node dist/src/index.js",
+    "test": "mocha",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.0",
     "@types/node": "^18.11.9",
     "@types/readline-sync": "^1.4.4",
     "@typescript-eslint/eslint-plugin": "^5.42.1",
+    "chai": "^4.3.7",
     "class-transformer": "^0.5.1",
     "eslint": "^8.27.0",
     "eslint-config-standard-with-typescript": "^23.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.5.1",
     "eslint-plugin-promise": "^6.1.1",
+    "mocha": "^10.1.0",
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "readline-sync": "^1.4.10"
+    "readline-sync": "^1.4.10",
+    "source-map-support": "^0.5.21"
+  },
+  "mocha": {
+    "diff": true,
+    "extension": [
+      "js",
+      "cjs",
+      "mjs"
+    ],
+    "package": "./package.json",
+    "reporter": "spec",
+    "slow": "75",
+    "timeout": "2000",
+    "ui": "bdd",
+    "watch-files": [
+      "dist/**/*.js",
+      "dist/test/**/*.js"
+    ],
+    "watch-ignore": [
+      "lib/vendor"
+    ]
   }
 }
