@@ -15,6 +15,23 @@ export class StatementDeSerializer {
                 return new Statement();
         }
     }
+
+    static getStatementTypeFromString(type: string): StatementType {
+        switch (type) {
+            case "normal":
+                return StatementType.S_NORMAL;
+            case "if":
+                return StatementType.S_IF;
+            case "switch":
+                return StatementType.S_SWITCH;
+            case "loop":
+                return StatementType.S_LOOP;
+            case "loop-reverse":
+                return StatementType.S_LOOP_REVERSE;
+            default:
+                return StatementType.S_BLANK;
+        }
+    }
 }
 
 export interface I_Statement { content: string, type: string };
@@ -37,22 +54,20 @@ export class Statement {
         return JSON.stringify(temp);
     }
 
-    static fromJson(json: any): Statement {
+    static fromJson(json: I_Statement): Statement {
         let _content: string | null = json?.content ?? null;
         let _type: StatementType;
-        if (json?.type != null) {
-            _type = json.type;
-        }
-        else if (_content == null) {
-            _type = StatementType.S_BLANK;
-        }
-        else {
+        _type = StatementDeSerializer.getStatementTypeFromString(json.type);
+        if (_content != null && _type == StatementType.S_BLANK) {
             _type = StatementType.S_NORMAL;
         }
         return new Statement(_content, _type);
     }
 }
 
+export interface I_IfStatement extends I_Statement {
+    blocks: I_Statement[][];
+}
 export class IfStatement extends Statement {
     statementBlocks: Statement[][];
 
@@ -64,46 +79,47 @@ export class IfStatement extends Statement {
         this.statementBlocks = statementBlocks;
     }
 
-    static fromJson(json: any): IfStatement {
+    static fromJson(json: I_IfStatement): IfStatement {
         let statementBlocks: Statement[][] = [];
-        for (const block of json?.blocks) {
+        for (const block of json.blocks) {
             let statements: Statement[] = [];
             for (const statement of block) {
                 statements.push(StatementDeSerializer.fromJson(statement));
             }
             statementBlocks.push(statements);
         }
-        return new IfStatement(json?.content,statementBlocks);
+        return new IfStatement(json.content, statementBlocks);
     }
 }
 
-export class SwitchStatement extends IfStatement {
-    predicates: string[];
+export interface I_CaseBlocks { case: string, statements: Statement[] };
+export interface I_SwitchStatement extends I_Statement {
+    blocks: { case: string, statements: I_Statement[] }[];
+}
+export class SwitchStatement extends Statement {
+    blocks: { case: string, statements: Statement[] }[];
 
     constructor();
-    constructor(predicates: string[]);
-    constructor(predicates: string[], statementBlocks: Statement[][]);
-    constructor(predicates: string[] = [], statementBlocks: Statement[][] = [[]]) {
-        super(null, statementBlocks);
-        this._type = StatementType.S_SWITCH;
-        this.predicates = predicates;
+    constructor(blocks: I_CaseBlocks[])
+    constructor(blocks: I_CaseBlocks[] = []) {
+        super(null, StatementType.S_SWITCH);
+        this.blocks = blocks;
     }
 
-    static fromJson(json: any): SwitchStatement {
-        let cases: string[] = [];
-        let blocks: Statement[][] = []
+    static fromJson(json: I_SwitchStatement): SwitchStatement {
+        let blocks: { case: string, statements: Statement[] }[] = []
         for (const block of json.blocks) {
-            cases.push(json?.case);
             let statements: Statement[] = [];
-            for (const statement of block) {
+            for (const statement of block.statements) {
                 statements.push(StatementDeSerializer.fromJson(statement));
             }
-            blocks.push(statements);
+            blocks.push({ case: block.case, statements: statements });
         }
-        return new SwitchStatement(cases, blocks);
+        return new SwitchStatement(blocks);
     }
 }
 
+export interface I_LoopStatement extends I_Statement { statements: I_Statement[] };
 export class LoopStatement extends Statement {
     statements: Statement[];
 
@@ -112,7 +128,7 @@ export class LoopStatement extends Statement {
     constructor(content: string | null, satements: Statement[]);
     constructor(content: string | null = null, statements: Statement[] = []) {
         super(content, StatementType.S_LOOP);
-        this.statements = [];
+        this.statements = statements;
     }
 
     static fromJson(json: any): LoopStatement {
@@ -148,5 +164,5 @@ export enum StatementType {
     S_SWITCH = "switch",
     S_LOOP = "loop",
     S_LOOP_REVERSE = "loop-reverse",
-    S_BLANK = "empty",
+    S_BLANK = "empty"
 }

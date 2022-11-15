@@ -11,7 +11,7 @@ import {
 
 describe("Statement fromJson tests", () => {
     it("blank should turn normally", () => {
-        console.log(Statement.fromJson("{}"));
+        console.log(Statement.fromJson(JSON.parse("{}")));
         console.log(new Statement());
         assert.strictEqual(
             Statement.fromJson(JSON.parse('{}')).type(),
@@ -102,25 +102,24 @@ describe("Statement fromJson tests", () => {
                 }
             ]
         }`);
-        let statement = new SwitchStatement(json);
+        let statement = SwitchStatement.fromJson(json);
         assert.strictEqual(
             statement.type(),
             new SwitchStatement().type(),
             "Conversion error on switch statement!"
         );
-        console.log(statement.predicates[0]);
         assert.strictEqual(
-            statement.predicates[0],
+            statement.blocks[0].case,
             "A = 1",
             "Conversion error on switch statement!"
         );
         assert.strictEqual(
-            statement.statementBlocks[2][0].type(),
+            statement.blocks[1].statements[0].type(),
             StatementType.S_NORMAL,
             "Conversion error on switch statement!"
         );
         assert.strictEqual(
-            statement.statementBlocks[2][1].content,
+            statement.blocks[1].statements[1].content,
             "KI: A - 1",
             "Conversion error on switch statement!"
         );
