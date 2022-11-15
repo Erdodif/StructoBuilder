@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "index": "tsc && node dist/src/index.js",
-    "test": "mocha",
+    "test": "mocha dist/test/*.test.js",
     "build": "tsc"
   },
   "keywords": [],
