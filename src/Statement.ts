@@ -1,16 +1,17 @@
 export class StatementDeSerializer {
-    static fromJson(json: any): Statement | IfStatement | SwitchStatement | LoopStatement | ReversedLoopStatement {
+    static fromJson(json: I_Statement | I_IfStatement | I_SwitchStatement | I_LoopStatement):
+        Statement | IfStatement | SwitchStatement | LoopStatement | ReversedLoopStatement {
         switch (json.type) {
             case "normal":
                 return Statement.fromJson(json);
             case "if":
-                return IfStatement.fromJson(json);
+                return IfStatement.fromJson(json as I_IfStatement);
             case "switch":
-                return SwitchStatement.fromJson(json);
+                return SwitchStatement.fromJson(json as I_SwitchStatement);
             case "loop":
-                return LoopStatement.fromJson(json);
+                return LoopStatement.fromJson(json as I_LoopStatement);
             case "loop-reverse":
-                return ReversedLoopStatement.fromJson(json);
+                return ReversedLoopStatement.fromJson(json as I_LoopStatement);
             default:
                 return new Statement();
         }
