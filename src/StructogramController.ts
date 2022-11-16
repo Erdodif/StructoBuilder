@@ -52,7 +52,7 @@ export class StructogramController {
             current = StructogramController.getSubElement(current, mapping[i]);
             i++;
         }
-        return current as Statement | null;
+        return current as Statement ?? null;
     }
 
     static fromJson(json: any): StructogramController {
