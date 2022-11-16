@@ -216,6 +216,85 @@ describe("Statement Deserializer tests", () => {
     });
 });
 
+describe("Statement toJson tests", () => {
+    it("should convert normal Statement to json normally", () => {
+        let json = `{"type":"normal","content":"G"}`;
+        let statement = Statement.fromJson(JSON.parse(json));
+        assert.strictEqual(
+            statement.toJSON(),
+            json,
+            "json mismatch on normal Statement!"
+        );
+        assert.strictEqual(
+            Statement.fromJson(JSON.parse(statement.toJSON())).toJSON(),
+            json,
+            "json mismatch on normal Statement!"
+        );
+    });
+
+    it("should convert if Statement to json normally", () => {
+        let json = `{"type":"if","content":"H","blocks":[[],[{"type":"empty"}]]}`;
+        let statement = IfStatement.fromJson(JSON.parse(json));
+        assert.strictEqual(
+            statement.toJSON(),
+            json,
+            "json mismatch on if Statement!"
+        );
+        assert.strictEqual(
+            IfStatement.fromJson(JSON.parse(statement.toJSON())).toJSON(),
+            json,
+            "json mismatch on if Statement!"
+        );
+    });
+
+    it("should convert switch Statement to json normally", () => {
+        let json = `{"type":"switch","blocks":[{"case":"A = B","statements":[]},{"case":"A < B","statements":[{"type":"empty"}]}]}`;
+        let statement = SwitchStatement.fromJson(JSON.parse(json));
+        assert.strictEqual(
+            statement.toJSON(),
+            json,
+            "json mismatch on switch Statement!"
+        );
+        assert.strictEqual(
+            SwitchStatement.fromJson(JSON.parse(statement.toJSON())).toJSON(),
+            json,
+            "json mismatch on switch Statement!"
+        );
+    });
+
+    it("should convert loop Statement to json normally", () => {
+        let json = `{"type":"loop","content":"i := 1 .. N","statements":[{"type":"empty"},{"type":"normal","content":"I"}]}`;
+        let statement = LoopStatement.fromJson(JSON.parse(json));
+        assert.strictEqual(
+            statement.toJSON(),
+            json,
+            "json mismatch on loop Statement!"
+        );
+        assert.strictEqual(
+            LoopStatement.fromJson(JSON.parse(statement.toJSON())).toJSON(),
+            json,
+            "json mismatch on loop Statement!"
+        );
+    });
+
+    it("should convert loop-reverse Statement to json normally", () => {
+        let json = `{"type":"loop-reverse","content":"i := 1 .. N","statements":[{"type":"empty"},{"type":"normal","content":"I"}]}`;
+        let statement = ReversedLoopStatement.fromJson(JSON.parse(json));
+        assert.strictEqual(
+            statement.toJSON(),
+            json,
+            "json mismatch on loop-reverse Statement!"
+        );
+        assert.strictEqual(
+            ReversedLoopStatement.fromJson(JSON.parse(statement.toJSON())).toJSON(),
+            json,
+            "json mismatch on loop-reverse Statement!"
+        );
+    });
+
+
+});
+
 describe("Statement Controller tests", () => {
     let loop = new LoopStatement("F", [
         new Statement("A"),
@@ -253,12 +332,12 @@ describe("Statement Controller tests", () => {
             "Type mismatch on getElement's first level"
         );
         assert.strictEqual(
-            (StructogramController.getSubElement(StructogramController.getSubElement(loop, 2) as IfStatement, 0)as Statement[])[0].type(),
+            (StructogramController.getSubElement(StructogramController.getSubElement(loop, 2) as IfStatement, 0) as Statement[])[0].type(),
             StatementType.S_NORMAL,
             "Type mismatch on getElement's second level"
         );
         assert.strictEqual(
-            (StructogramController.getSubElement(StructogramController.getSubElement(loop, 2) as IfStatement, 0)as Statement[])[1].type(),
+            (StructogramController.getSubElement(StructogramController.getSubElement(loop, 2) as IfStatement, 0) as Statement[])[1].type(),
             StatementType.S_BLANK,
             "Type mismatch on getElement's second level"
         );
@@ -270,8 +349,8 @@ describe("Statement Controller tests", () => {
         );
     });
 
-    it("should give element by mapping",()=>{
-        let controller = new StructogramController(new Structogram(null,[loop]));
+    it("should give element by mapping", () => {
+        let controller = new StructogramController(new Structogram(null, [loop]));
         assert.instanceOf(
             controller.getElementByMapping([0]),
             LoopStatement,
@@ -283,12 +362,12 @@ describe("Statement Controller tests", () => {
             "Error while fetching null object on first level"
         );
         assert.instanceOf(
-            controller.getElementByMapping([0,2]),
+            controller.getElementByMapping([0, 2]),
             IfStatement,
             "Type mismatch on second level"
         );
         assert.strictEqual(
-            controller.getElementByMapping([0,3]),
+            controller.getElementByMapping([0, 3]),
             null,
             "Error while fetching null object on second level"
         );
