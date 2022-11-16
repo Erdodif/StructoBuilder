@@ -75,11 +75,22 @@ export class Structogram {
         let structogram = new Structogram(json.signature);
         structogram.renderStart = json?.renderStart === true;
         structogram.statements = [];
-        console.log(json.statements.length);
         for (let i = 0; i < json.statements.length; i++) {
             structogram.statements.push(StatementDeSerializer.fromJson(json.statements[i]));
         }
         return structogram;
+    }
+
+    toJSON() {
+        let statements = "";
+        if (this.statements.length > 0) {
+            statements = this.statements[0].toJSON();
+            for (let i = 1; i < this.statements.length; i++) {
+                statements = statements.concat(`,${this.statements[i].toJSON()}`);
+            }
+        }
+        let renderStart = this.renderStart ? "true" : "false"
+        return `{"signature":"${this.name}","renderStart":${renderStart},"statements":[${statements}]}`;
     }
 
 }
