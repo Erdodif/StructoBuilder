@@ -5,7 +5,6 @@
   "main": "dist/src/index.js",
   "type": "module",
   "scripts": {
-    "index": "tsc && node dist/src/index.js",
     "test": "mocha dist/test/*.test.js",
     "build": "tsc"
   },
