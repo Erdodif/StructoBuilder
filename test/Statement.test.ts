@@ -8,7 +8,7 @@ import {
     ReversedLoopStatement,
     StatementType
 } from "../src/Statement.js";
-import { StructogramController } from "../src/StructogramController.js";
+import { Structogram, StructogramController } from "../src/StructogramController.js";
 
 describe("Statement fromJson tests", () => {
     it("blank should turn normally", () => {
@@ -267,6 +267,30 @@ describe("Statement Controller tests", () => {
                 StructogramController.getSubElement(loop, 2) as IfStatement, 0) as Statement[])[0].content,
             "D",
             "Content mismatch on nested element"
+        );
+    });
+
+    it("should give element by mapping",()=>{
+        let controller = new StructogramController(new Structogram(null,[loop]));
+        assert.instanceOf(
+            controller.getElementByMapping([0]),
+            LoopStatement,
+            "Type mismatch on first level"
+        );
+        assert.strictEqual(
+            controller.getElementByMapping([1]),
+            null,
+            "Error while fetching null object on first level"
+        );
+        assert.instanceOf(
+            controller.getElementByMapping([0,2]),
+            IfStatement,
+            "Type mismatch on second level"
+        );
+        assert.strictEqual(
+            controller.getElementByMapping([0,3]),
+            null,
+            "Error while fetching null object on second level"
         );
     });
 });
