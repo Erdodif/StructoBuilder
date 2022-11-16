@@ -8,6 +8,7 @@ import {
     ReversedLoopStatement,
     StatementType
 } from "../src/Statement.js";
+import { StructogramController } from "../src/StructogramController.js";
 
 describe("Statement fromJson tests", () => {
     it("blank should turn normally", () => {
@@ -160,7 +161,7 @@ describe("Statement fromJson tests", () => {
         );
         assert.strictEqual(
             statement.content,
-            "i := 1..N", 
+            "i := 1..N",
             "Content mismatch error on loop statement!");
         assert.strictEqual(
             statement.statements[1].content,
@@ -183,34 +184,89 @@ describe("Statement fromJson tests", () => {
 describe("Statement Deserializer tests", () => {
     it("should give proper type", () => {
         assert.instanceOf(
-            Deserializer.fromJsonString('{}'), 
-            Statement, 
+            Deserializer.fromJsonString('{}'),
+            Statement,
             "Type mismatch on empty conversion!"
         );
         assert.instanceOf(
-            Deserializer.fromJsonString('{"type":"normal","content":"F"}'), 
-            Statement, 
+            Deserializer.fromJsonString('{"type":"normal","content":"F"}'),
+            Statement,
             "Type mismatch on normal conversion!"
         );
         assert.instanceOf(
-            Deserializer.fromJsonString('{"type":"if","content":"F","blocks":[]}'), 
-            IfStatement, 
+            Deserializer.fromJsonString('{"type":"if","content":"F","blocks":[]}'),
+            IfStatement,
             "Type mismatch on if conversion!"
         );
         assert.instanceOf(
-            Deserializer.fromJsonString('{"type":"switch","predicates":[],"blocks":[]}'), 
-            SwitchStatement, 
+            Deserializer.fromJsonString('{"type":"switch","predicates":[],"blocks":[]}'),
+            SwitchStatement,
             "Type mismatch on switch conversion!"
         );
         assert.instanceOf(
-            Deserializer.fromJsonString('{"type":"loop","statements":[{"type":"empty"}]}'), 
-            LoopStatement, 
+            Deserializer.fromJsonString('{"type":"loop","statements":[{"type":"empty"}]}'),
+            LoopStatement,
             "Type mismatch on loop conversion!"
         );
         assert.instanceOf(
-            Deserializer.fromJsonString('{"type":"loop-reverse","statements":[{"type":"empty"}]}'), 
-            ReversedLoopStatement, 
+            Deserializer.fromJsonString('{"type":"loop-reverse","statements":[{"type":"empty"}]}'),
+            ReversedLoopStatement,
             "Type mismatch reverse-loop conversion!"
+        );
+    });
+});
+
+describe("Statement Controller tests", () => {
+    let loop = new LoopStatement("F", [
+        new Statement("A"),
+        new Statement(),
+        new IfStatement("C", [[new Statement("D"), new Statement()]]),
+    ]);
+    it("getSubElement should give proper statement type", () => {
+        assert.strictEqual(
+            (StructogramController.getSubElement(loop, 0) as Statement).type(),
+            StatementType.S_NORMAL,
+            "Type mismatch on first element"
+        );
+        assert.strictEqual(
+            (StructogramController.getSubElement(loop, 1) as Statement).type(),
+            StatementType.S_BLANK,
+            "Type mismatch on second element"
+        );
+        assert.strictEqual(
+            (StructogramController.getSubElement(loop, 2) as Statement).type(),
+            StatementType.S_IF,
+            "Type mismatch on third element"
+        );
+    });
+
+    it("getSubElement should give proper content", () => {
+        assert.strictEqual((StructogramController.getSubElement(loop, 2) as Statement).content,
+            "C",
+            "Content on nested element"
+        );
+    });
+    it("getSubElement should give proper nested content", () => {
+        assert.instanceOf(
+            StructogramController.getSubElement(loop, 2),
+            IfStatement,
+            "Type mismatch on getElement's first level"
+        );
+        assert.strictEqual(
+            (StructogramController.getSubElement(StructogramController.getSubElement(loop, 2) as IfStatement, 0)as Statement[])[0].type(),
+            StatementType.S_NORMAL,
+            "Type mismatch on getElement's second level"
+        );
+        assert.strictEqual(
+            (StructogramController.getSubElement(StructogramController.getSubElement(loop, 2) as IfStatement, 0)as Statement[])[1].type(),
+            StatementType.S_BLANK,
+            "Type mismatch on getElement's second level"
+        );
+        assert.strictEqual(
+            (StructogramController.getSubElement(
+                StructogramController.getSubElement(loop, 2) as IfStatement, 0) as Statement[])[0].content,
+            "D",
+            "Content mismatch on nested element"
         );
     });
 });
