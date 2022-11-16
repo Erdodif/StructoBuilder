@@ -74,10 +74,10 @@ export class Structogram {
     static fromJson(json: I_Structogram): Structogram {
         let structogram = new Structogram(json.signature);
         structogram.renderStart = json?.renderStart === true;
-        let statements: Statement[] = [];
+        structogram.statements = [];
+        console.log(json.statements.length);
         for (let i = 0; i < json.statements.length; i++) {
-            statements.push(StatementDeSerializer.fromJson(json.statements[i]));
-            //TODO: Not Workin' F
+            structogram.statements.push(StatementDeSerializer.fromJson(json.statements[i]));
         }
         return structogram;
     }
