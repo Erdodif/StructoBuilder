@@ -58,12 +58,6 @@ export class Statement {
         }
     }
 
-    toJSON() {
-        let temp = this;
-        temp._type = this._type;
-        return JSON.stringify(temp);
-    }
-
     static fromJson(json: I_Statement): Statement {
         let _content: string | null = json?.content ?? null;
         let _type: StatementType;
@@ -72,6 +66,13 @@ export class Statement {
             _type = StatementType.S_NORMAL;
         }
         return new Statement(_content, _type);
+    }
+
+    toJSON() {
+        if (this._type === StatementType.S_BLANK) {
+            return `{"type":"empty"}`;
+        }
+        return `{"type":"${this.type()}","content":"${this.content}"}`;
     }
 }
 
@@ -105,6 +106,28 @@ export class IfStatement extends Statement {
         }
         return new IfStatement(json.content, statementBlocks);
     }
+
+    toJSON() {
+        let truePart = "";
+        let falsePart = "";
+        if (this.statementBlocks.length > 0) {
+            if (this.statementBlocks[0].length > 0) {
+                truePart = this.statementBlocks[0][0].toJSON();
+            }
+            for (let i = 1; i < this.statementBlocks[0].length; i++) {
+                truePart = truePart.concat(`,${this.statementBlocks[0][i].toJSON()}`);
+            }
+        }
+        if (this.statementBlocks.length > 1 && this.statementBlocks.length > 0) {
+            if (this.statementBlocks[1].length > 0) {
+                falsePart = this.statementBlocks[1][0].toJSON();
+            }
+            for (let i = 1; i < this.statementBlocks[1].length; i++) {
+                falsePart = falsePart.concat(`,${this.statementBlocks[1][i].toJSON()}`);
+            }
+        }
+        return `{"type":"${this.type()}","content":"${this.content}","blocks":[[${truePart}],[${falsePart}]]}`;
+    }
 }
 
 export interface I_CaseBlocks { case: string, statements: Statement[] };
@@ -135,6 +158,28 @@ export class SwitchStatement extends Statement {
         }
         return new SwitchStatement(blocks);
     }
+
+    private static caseBlockToJSON(block: { case: string, statements: Statement[] }) {
+        let statements = "";
+        if (block.statements.length > 0) {
+            statements = block.statements[0].toJSON();
+            for (let i = 1; i < block.statements.length; i++) {
+                statements = statements.concat(`,${block.statements[i].toJSON()}`);
+            }
+        }
+        return `{"case":"${block.case}","statements":[${statements}]}`;
+    }
+
+    toJSON() {
+        let sBlocks = "";
+        if (this.blocks.length > 0) {
+            sBlocks = SwitchStatement.caseBlockToJSON(this.blocks[0]);
+            for (let i = 1; i < this.blocks.length; i++) {
+                sBlocks = sBlocks.concat(`,${SwitchStatement.caseBlockToJSON(this.blocks[i])}`);
+            }
+        }
+        return `{"type":"${this.type()}","blocks":[${sBlocks}]}`;
+    }
 }
 
 export interface I_LoopStatement extends I_Statement { statements: I_Statement[] };
@@ -156,6 +201,17 @@ export class LoopStatement extends Statement {
         }
         return new LoopStatement(json?.content ?? null, statements);
     }
+
+    toJSON() {
+        let statements = "";
+        if (this.statements.length > 0) {
+            statements = this.statements[0].toJSON();
+            for (let i = 1; i < this.statements.length; i++) {
+                statements = statements.concat(`,${this.statements[i].toJSON()}`);
+            }
+        }
+        return `{"type":"${this.type()}","content":"${this.content}","statements":[${statements}]}`;
+    }
 }
 
 export class ReversedLoopStatement extends LoopStatement {
@@ -173,6 +229,10 @@ export class ReversedLoopStatement extends LoopStatement {
             statements.push(StatementDeSerializer.fromJson(statement));
         }
         return new ReversedLoopStatement(json?.content ?? null, statements);
+    }
+
+    toJSON(): string {
+        return super.toJSON();
     }
 }
 
