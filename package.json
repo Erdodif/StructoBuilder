@@ -6,7 +6,6 @@
   "types":"dist/src/StructogramController.d.ts",
   "type": "module",
   "scripts": {
-    "test": "mocha dist/test/*.test.js",
     "build": "tsc"
   },
   "keywords": ["structogram","algorithm","chart"],
