@@ -23,7 +23,7 @@ describe("Structogram fromJson tests", () => {
         );
     });
 
-    it("should keep content from json",()=>{
+    it("should keep content from json", () => {
         assert.isArray(
             controller.structogram.statements,
             "Error: structogram's statements is not ana array!"
@@ -37,6 +37,27 @@ describe("Structogram fromJson tests", () => {
             (controller.getElementByMapping([1]) as Statement).content,
             "i := 1..N",
             "Content mismatch on first element!"
+        );
+    });
+
+});
+
+describe("Structogram toJson tests", () => {
+    let json = `{"signature":"test","renderStart":false,"statements":[{"type":"loop","content":"i < N and Fail(tests[i])","statements":[{"type":"normal","content":"work on methods[i]"}]}]}`;
+    let structogram = Structogram.fromJson(JSON.parse(json));
+    it("should convert to proper json", () => {
+        assert.strictEqual(
+            structogram.toJSON(),
+            json,
+            "json mismatch on structorgram!"
+        );
+    });
+
+    it("should convert from self product", () => {
+        assert.strictEqual(
+            Structogram.fromJson(JSON.parse(structogram.toJSON())).toJSON(),
+            json,
+            "json mismatch on structorgram!"
         );
     });
 
