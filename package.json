@@ -2,34 +2,31 @@
   "name": "structobuilder",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/src/index.js",
+  "main": "dist/src/StructogramController.js",
+  "types":"dist/src/StructogramController.d.ts",
   "type": "module",
   "scripts": {
     "test": "mocha dist/test/*.test.js",
     "build": "tsc"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["structogram","algorithm","chart"],
+  "author": "Philip G. Woods <erdodif@gmail.com> (https://github.com/Erdodif)",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Erdodif/StructoBuilder"
+  },
   "devDependencies": {
     "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.11.9",
-    "@types/readline-sync": "^1.4.4",
-    "@typescript-eslint/eslint-plugin": "^5.42.1",
     "chai": "^4.3.7",
     "class-transformer": "^0.5.1",
-    "eslint": "^8.27.0",
-    "eslint-config-standard-with-typescript": "^23.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.5.1",
-    "eslint-plugin-promise": "^6.1.1",
     "mocha": "^10.1.0",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",
+    "source-map-support": "^0.5.21"
   },
   "dependencies": {
-    "readline-sync": "^1.4.10",
-    "source-map-support": "^0.5.21"
   },
   "mocha": {
     "diff": true,
