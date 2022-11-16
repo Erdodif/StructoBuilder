@@ -1,7 +1,7 @@
 {
-  "name": "structobuilder",
+  "name": "structogram",
   "version": "1.0.0",
-  "description": "",
+  "description": "A structogram Object which can be used to implement an algorithm visualization tool. Json-oriented.",
   "main": "dist/src/StructogramController.js",
   "types":"dist/src/StructogramController.d.ts",
   "type": "module",
