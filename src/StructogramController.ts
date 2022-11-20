@@ -1,5 +1,9 @@
 import "./Statement.js";
 import { StatementType, Statement, StatementDeSerializer, LoopStatement, IfStatement, I_Statement, SwitchStatement, ReversedLoopStatement } from "./Statement.js";
+
+/**
+ * Controlelr class for Structogram
+ */
 export class StructogramController {
     structogram: Structogram;
 
@@ -12,10 +16,21 @@ export class StructogramController {
         }
     }
 
+    /**
+     * Gives a mapping from the given string
+     * @param mapping A semi-colon (;) separated list of integers
+     * @returns A list of numbers, also known as mapping
+     */
     static splitMappingString(mapping: string): number[] {
         return mapping.replace(/[^;0-9]/, "").split(";").map(Number);
     }
 
+    /**
+     * Gives the proper statement from the statement/structogram hierarchy (one level below)
+     * @param holder A statement, a list of Statement, or even a Structogram (null returns null)
+     * @param index Index of the element
+     * @returns A statement, a list of statement or null, if not found
+     */
     static getSubElement(holder: Statement | Statement[] | Structogram | null, index: number):
         Statement[] | Statement | null {
         if (!holder) {
@@ -41,6 +56,11 @@ export class StructogramController {
         }
     }
 
+    /**
+     * Gives the proper statement from the structogram hierarchy (any level)
+     * @param mapping a list of numbers, representing the index of each search depth
+     * @returns A Statement, a list of Statements, or null, if not found
+     */
     getElementByMapping(mapping: number[])
         : Statement[] | Statement | IfStatement | SwitchStatement | LoopStatement | ReversedLoopStatement | null {
         if (mapping.length < 1) {
@@ -61,6 +81,10 @@ export class StructogramController {
 }
 
 export interface I_Structogram { signature: string | null | undefined, renderStart: boolean | undefined, statements: I_Statement[] };
+
+/**
+ * An Object representing an algorithm (pseudocode-like) structure
+ */
 export class Structogram {
     name: string | null;
     statements: Statement[];
