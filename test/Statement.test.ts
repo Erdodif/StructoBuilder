@@ -6,7 +6,8 @@ import {
     SwitchStatement,
     LoopStatement,
     ReversedLoopStatement,
-    StatementType
+    StatementType,
+    StatementConverter as Converter
 } from "../src/Statement.js";
 import { Structogram, StructogramController } from "../src/StructogramController.js";
 
@@ -370,6 +371,107 @@ describe("Statement Controller tests", () => {
             controller.getElementByMapping([0, 3]),
             null,
             "Error while fetching null object on second level"
+        );
+    });
+});
+
+describe("Statement Converter tests", () => {
+    let statement = new Statement("A");
+    let ifStatement = new IfStatement("B", [[new Statement("C"), new Statement("D")], [new Statement("E"), new Statement("F")]]);
+    let switchStatement = new SwitchStatement([
+        { case: "G", statements: [new Statement("H")] },
+        { case: "I", statements: [] },
+        { case: "else", statements: [new Statement("J"), new Statement("K")] }]
+    );
+    let loopStatement = new LoopStatement("L", [new Statement("M"), new Statement("N")]);
+    it("should convert to IfStatement properly (with content)", () => {
+        assert.strictEqual(
+            Converter.toIfStatement(statement).content,
+            "A",
+            "Content mismatch on Statement to IfStatement conversion!"
+        );
+        assert.strictEqual(
+            Converter.toIfStatement(switchStatement).content,
+            "G",
+            "Content mismatch on SwitchStatement to IfStatement conversion!"
+        );
+        assert.isNull(
+            Converter.toIfStatement(new SwitchStatement()).content,
+            "Content mismatch on empty SwitchStatement to IfStatement conversion!"
+        );
+        assert.strictEqual(
+            Converter.toIfStatement(loopStatement).content,
+            "L",
+            "Content mismatch on LoopStatement to IfStatement conversion!"
+        );
+    });
+
+    it("should convert to IfStatement properly (with subElements)", () => {
+        assert.isEmpty(
+            Converter.toIfStatement(statement).statementBlocks[0],
+            "Converted IfStatement has something in the statementBlocks!"
+        );
+        assert.strictEqual(
+            Converter.toIfStatement(switchStatement).statementBlocks[1][0].content,
+            "J",
+            "Content mismatch in ElsePart"
+        );
+        switchStatement.blocks[2].case = "";
+        assert.isEmpty(
+            Converter.toIfStatement(switchStatement).statementBlocks[1],
+            "Content mismatch in ElsePart (when there's no else provided)!"
+        );
+        assert.deepStrictEqual(
+            Converter.toIfStatement(loopStatement).statementBlocks[0],
+            loopStatement.statements,
+            "Content mismatch at Loop conversion"
+        );
+        assert.strictEqual(
+            Converter.toIfStatement(ifStatement),
+            ifStatement,
+            "Content mismatch on self Conversion"
+        );
+    });
+
+    it("should convert to SwitchStatement properly (with statementBlocks)", () => {
+        assert.isEmpty(
+            Converter.toSwitchStatement(statement).blocks,
+            "Switch blocks not empty!"
+        );
+        assert.isEmpty(
+            Converter.toSwitchStatement(loopStatement).blocks,
+            "Switch blocks not empty!"
+        );
+        assert.strictEqual(
+            Converter.toSwitchStatement(ifStatement).blocks[0].case,
+            "B",
+            "Content mismatch on IfStatement to SwitchStatement conversion (Case)!"
+        );
+        assert.deepStrictEqual(
+            Converter.toSwitchStatement(ifStatement).blocks[0].statements,
+            ifStatement.statementBlocks[0],
+            "Content mismatch on IfStatement to SwitchStatement conversion (Statements)!"
+        );
+    });
+
+    it("should convert to LoopStatement properly (with content)", () => {
+        assert.strictEqual(
+            Converter.toLoopStatement(ifStatement).content,
+            "B",
+            "Content mismatch on LoopStatement conversion!"
+        );
+    });
+
+    it("should convert to LoopStatementScope properly", () => {
+        assert.deepStrictEqual(
+            (Converter.ifToLoopStatementScope(ifStatement)[0] as LoopStatement).statements,
+            ifStatement.statementBlocks[0],
+            "Content mismatch on LoopStatement conversion!"
+        );
+        assert.deepStrictEqual(
+            Converter.ifToLoopStatementScope(ifStatement)[1],
+            ifStatement.statementBlocks[1][0],
+            "Content mismatch on LoopStatement conversion!"
         );
     });
 });
