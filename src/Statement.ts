@@ -1,4 +1,13 @@
+/**
+ * Deserializer for Statement class
+ */
 export class StatementDeSerializer {
+
+    /**
+     * Returns the proper statement from json Object 
+     * @param json JSON Object wich satisfies one of the Statement Interfaces
+     * @returns Statement based on the given type
+     */
     static fromJson(json: I_Statement | I_IfStatement | I_SwitchStatement | I_LoopStatement):
         Statement | IfStatement | SwitchStatement | LoopStatement | ReversedLoopStatement {
         switch (json.type) {
@@ -17,10 +26,20 @@ export class StatementDeSerializer {
         }
     }
 
+    /**
+     * Returns the proper statement from json String 
+     * @param json String, which contains a valid JSON
+     * @returns Statement based on the given type
+     */
     static fromJsonString(json: string): Statement | IfStatement | SwitchStatement | LoopStatement | ReversedLoopStatement {
         return this.fromJson(JSON.parse(json));
     }
 
+    /**
+     * Gives the proper StatementType
+     * @param type A string
+     * @returns StatementType based on the given string (Default: S_BLANK)
+     */
     static getStatementTypeFromString(type: string): StatementType {
         switch (type) {
             case "normal":
@@ -39,7 +58,100 @@ export class StatementDeSerializer {
     }
 }
 
+/**
+ * Converter class for non-trivial Statement conversions
+ */
+export class StatementConverter {
+
+    /**
+     * Converts A Statement into an IfStatement
+     * @param statement Can be a loop, a Switch or a regular Statement
+     * @returns The Desired IfStatement
+     */
+    static toIfStatement(statement: Statement | IfStatement | SwitchStatement | LoopStatement | ReversedLoopStatement): IfStatement {
+        if (statement instanceof IfStatement) {
+            return statement;
+        }
+        if (statement instanceof SwitchStatement) {
+            let elsePart: Statement[] = [];
+            if (statement.blocks && statement.blocks.length > 1 && statement.blocks[statement.blocks.length - 1].case === "else") {
+                elsePart = statement.blocks[statement.blocks.length - 1].statements;
+            }
+            return new IfStatement(statement?.blocks[0]?.case ?? null, [statement?.blocks[0]?.statements ?? [], elsePart]);
+        }
+        if (statement instanceof LoopStatement || statement instanceof ReversedLoopStatement) {
+            return new IfStatement(statement?.content ?? null, [statement?.statements ?? [], []]);
+        }
+        if (statement instanceof Statement) {
+            return new IfStatement(statement?.content ?? null);
+        }
+        throw new TypeError(`There's no explicit conversion between never and IfStatement!`);
+    }
+
+    /**
+     * Converts A Statement into an IfStatement
+     * @param statement An If of regular Statement
+     * @returns A SwitchStatement
+     */
+    static toSwitchStatement(statement: Statement | IfStatement): SwitchStatement {
+        if (statement instanceof IfStatement) {
+            let firstCaseBlock: I_CaseBlock = { case: statement.content!, statements: statement.statementBlocks[0] };
+            let secondCaseBlock: I_CaseBlock = { case: "else", statements: statement.statementBlocks[1] };
+            return new SwitchStatement([firstCaseBlock, secondCaseBlock]);
+        }
+        if(statement instanceof Statement){
+            return new SwitchStatement();
+        }
+        throw new TypeError(`There's no explicit conversion between never and SwitchStatement!`);
+    }
+
+    /**
+     * Converts A Statement into a LoopStatement
+     * @param statement A regular Statement
+     * @returns A LoopStatement
+     */
+    static toLoopStatement(statement: Statement | ReversedLoopStatement): LoopStatement {
+        if(statement instanceof ReversedLoopStatement){
+            return new LoopStatement(statement.content,statement.statements);
+        }
+        if (statement instanceof Statement) {
+            return new LoopStatement(statement.content);
+        }
+        throw new TypeError(`There's no explicit conversion between never and LoopStatement!`);
+    }
+
+    /**
+     * Converts A Statement into a ReversedLoopStatement
+     * @param statement A regular Statement
+     * @returns A ReversedLoopStatement
+     */
+    static toReversedLoopStatement(statement: Statement | LoopStatement): ReversedLoopStatement {
+        if(statement instanceof ReversedLoopStatement){
+            return new ReversedLoopStatement(statement.content,statement.statements);
+        }
+        if (statement instanceof Statement) {
+            return new ReversedLoopStatement(statement.content);
+        }
+        throw new TypeError(`There's no explicit conversion between never and ReversedLoopStatement!`);
+    }
+
+    /**
+     * Converts an InfStatement into an array of Statements, starting with a LoopStatement (with the "true" part), 
+     * followed by the rest of the statements (the "else" part)
+     * @param statement An IfStatement
+     * @returns An array of Statements, which starts with a LoopStatement
+     */
+    static ifToLoopStatementScope(statement: IfStatement): Statement[] {
+        return [new LoopStatement(statement.content, statement.statementBlocks[0]), ...statement.statementBlocks[1]];
+    }
+
+}
+
 export interface I_Statement { content: string, type: string };
+
+/**
+ * An Object representing a single, syncronous statement on a Structogram
+ */
 export class Statement {
     protected _type: StatementType = StatementType.S_BLANK;
     content: string | null;
@@ -79,6 +191,10 @@ export class Statement {
 export interface I_IfStatement extends I_Statement {
     blocks: I_Statement[][];
 }
+
+/**
+ * An Object representing a simple junction point on a Structogram
+ */
 export class IfStatement extends Statement {
     statementBlocks: Statement[][];
 
@@ -130,16 +246,20 @@ export class IfStatement extends Statement {
     }
 }
 
-export interface I_CaseBlocks { case: string, statements: Statement[] };
+export interface I_CaseBlock { case: string, statements: Statement[] };
 export interface I_SwitchStatement extends I_Statement {
     blocks: { case: string, statements: I_Statement[] }[];
 }
+
+/**
+ * An Object representing a multiple selection junction point on a Structogram
+ */
 export class SwitchStatement extends Statement {
     blocks: { case: string, statements: Statement[] }[];
 
     constructor();
-    constructor(blocks: I_CaseBlocks[])
-    constructor(blocks: I_CaseBlocks[] = []) {
+    constructor(blocks: I_CaseBlock[])
+    constructor(blocks: I_CaseBlock[] = []) {
         super(null, StatementType.S_SWITCH);
         this.blocks = blocks;
     }
@@ -183,6 +303,10 @@ export class SwitchStatement extends Statement {
 }
 
 export interface I_LoopStatement extends I_Statement { statements: I_Statement[] };
+
+/**
+ * An Object representing a repetitive action on a Structogram (based on a condition, tested before each execution)
+ */
 export class LoopStatement extends Statement {
     statements: Statement[];
 
@@ -214,6 +338,9 @@ export class LoopStatement extends Statement {
     }
 }
 
+/**
+ * An Object representing a repetitive action on a Structogram (based on a condition, tested after each execution)
+ */
 export class ReversedLoopStatement extends LoopStatement {
     constructor();
     constructor(content: string | null);
@@ -236,6 +363,10 @@ export class ReversedLoopStatement extends LoopStatement {
     }
 }
 
+
+/**
+ * Type of a Statement (mostly used in serialization)
+ */
 export enum StatementType {
     S_NORMAL = "normal",
     S_IF = "if",
