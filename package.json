@@ -1,6 +1,6 @@
 {
   "name": "structogram",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A structogram Object which can be used to implement an algorithm visualization tool. Json-oriented.",
   "main": "dist/src/StructogramController.js",
   "types":"dist/src/StructogramController.d.ts",
