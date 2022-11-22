@@ -105,15 +105,69 @@ export class StructogramController {
     /**
      * Sets Statement on the given position.
      * @param mapping The position of the old Element
-     * @param newStatement The new Statement
-     * @throws When there's no statement on the given mapping
+     * @param newStatement The new Statement, a list of Statements, or null, to remove an element on the iven mapping
+     * @param moveJam If there is an element on the given position, 
+     * that statement and all statements after will be moved after the `newStatement`
+     * (Default `false`, which means that the Statement on the given location will be overriden)
+     * 
+     * Note that if newStatement is null, a deletion will happen, and moveJam will be ignored.
+     * @throws When there's no statement on the given mapping, or the mapping is incomplete
      */
-    setElementByMapping(mapping: number[], newStatement: Statement): void {
-        let old = this.getElementByMapping(mapping)
-        if (old === null) {
+    setElementByMapping(mapping: number[], newStatement: Statement[] | Statement | null, moveJam: boolean = false): void {
+        let index = mapping.pop()!;
+        if (mapping.length == 0) {
+            if (this.structogram.statements.length < index) {
+                index = this.structogram.statements.length - 1
+            }
+            if (Array.isArray(newStatement)) {
+                this.structogram.statements.splice(index, moveJam ? 0 : 1, ...newStatement);
+            }
+            else if (newStatement) {
+                this.structogram.statements.splice(index, moveJam ? 0 : 1, newStatement);
+            }
+            else {
+                this.structogram.statements.splice(index, 1);
+            }
+            return;
+        }
+        if (!this.getElementByMapping(mapping)) {
             throw new Error("Statement not found!");
         }
-        old = newStatement;
+        let statement = this.getElementByMapping(mapping);
+        if (Array.isArray(statement)) {
+            if (statement.length < index) {
+                index = statement.length - 1
+            }
+            if (Array.isArray(newStatement)) {
+                statement.splice(index, moveJam ? 0 : 1, ...newStatement);
+            }
+            else if (newStatement) {
+                statement.splice(index, moveJam ? 0 : 1, newStatement);
+            }
+            else {
+                statement.splice(index, 1);
+            }
+            return;
+        }
+        switch (statement?.type()) {
+            case "loop":
+            case "loop-reverse":
+                if ((statement as LoopStatement).statements.length < index) {
+                    index = (statement as LoopStatement).statements.length - 1
+                }
+                if (Array.isArray(newStatement)) {
+                    (statement as LoopStatement).statements.splice(index, moveJam ? 0 : 1, ...newStatement);
+                }
+                else if (newStatement) {
+                    (statement as LoopStatement).statements.splice(index, moveJam ? 0 : 1, newStatement);
+                }
+                else {
+                    (statement as LoopStatement).statements.splice(index, 1);
+                }
+                return;
+            default:
+                throw new Error("Statement not capable for holding subElements directly.");
+        }
     }
 
     /**
@@ -126,45 +180,19 @@ export class StructogramController {
      * (in this case, clarify which block you want to insert).
      * @param from The mapping of the statement or an array of statement
      * @param to The mapping of the desired location
+     * @param moveJam If there is an element on the given position, 
+     * that statement and all statements after will be moved after the `newStatement`
+     * (Default `false`, which means that the Statement on the given location will be overriden)
+     * @throws If the origin of the statement is non-existing
      */
-    moveToPosition(from: number[], to: number[]): void {
-        this.ensureMappingValid(from);
-        let tmpStatement = this.getElementByMapping(from) as Statement | Statement[];
-        let parentMapping = [...to];
-        let index = parentMapping.pop()!;
-        this.ensureMappingValid(parentMapping);
-        let parent: Statement[] | Statement | null = to.length == 0 ? this.structogram.statements : this.getElementByMapping(parentMapping);
-        if (parent === null) {
-            throw new Error("Target parent element not found!");
+    moveToPosition(from: number[], to: number[], moveJam: boolean = false): void {
+        let statement = this.getElementByMapping(from);
+        if (statement === null) {
+            throw new Error("Element not found!");
         }
-        if (parent instanceof LoopStatement) {
+        this.setElementByMapping(from, null);
+        this.setElementByMapping(to, statement, moveJam)
 
-            return this.insertToPosition(parent.statements, tmpStatement, index);
-        }
-        if (Array.isArray(parent)) {
-            return this.insertToPosition(parent, tmpStatement, index);
-        }
-        throw new Error(`Statement type "${parent.type()} is not capable to hold elements directly!"`);
-    }
-
-    /**
-     * Inserts a statement item, or an array of statements into the given position.
-     * @param array An array of Statement
-     * @param statement A statement item or an array of statements
-     * @param index The desired position
-     */
-    private insertToPosition(array: Statement[], statement: Statement | Statement[], index: number): void {
-        if (array) {
-            if (index > array.length) {
-                index = -1;
-            }
-            if (Array.isArray(statement)) {
-                array.splice(index, 0, ...statement);
-                return;
-            }
-            array.splice(index, 0, statement);
-            return;
-        }
     }
 
     /**
