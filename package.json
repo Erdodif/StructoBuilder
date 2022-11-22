@@ -26,10 +26,12 @@
     "chai": "^4.3.7",
     "class-transformer": "^0.5.1",
     "mocha": "^10.1.0",
-    "typescript": "^4.8.4",
-    "source-map-support": "^0.5.21"
+    "source-map-support": "^0.5.21",
+    "typescript": "^4.8.4"
   },
-  "dependencies": {},
+  "dependencies": {
+    "deep-copy-ts": "^0.5.4"
+  },
   "mocha": {
     "diff": true,
     "extension": [

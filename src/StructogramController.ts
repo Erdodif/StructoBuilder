@@ -1,8 +1,17 @@
-import "./Statement.js";
-import { StatementType, Statement, StatementDeSerializer, LoopStatement, IfStatement, I_Statement, SwitchStatement, ReversedLoopStatement } from "./Statement.js";
+import { deepCopy } from "deep-copy-ts";
+import {
+    StatementType,
+    Statement,
+    StatementDeSerializer,
+    LoopStatement,
+    IfStatement,
+    I_Statement,
+    SwitchStatement,
+    ReversedLoopStatement
+} from "./Statement.js";
 
 /**
- * Controlelr class for Structogram
+ * Controller class for Structogram
  */
 export class StructogramController {
     structogram: Structogram;
@@ -44,11 +53,16 @@ export class StructogramController {
         }
         switch (holder.type()) {
             case StatementType.S_IF:
+                if (index > 1) {
+                    return null;
+                }
                 return (holder as IfStatement).statementBlocks[index] as Statement[];
             case StatementType.S_SWITCH:
+                if (index > (holder as SwitchStatement).blocks.length - 1) {
+                    return null;
+                }
                 return (holder as SwitchStatement).blocks[index].statements as Statement[];
             case StatementType.S_LOOP:
-                return (holder as ReversedLoopStatement).statements[index] as Statement;
             case StatementType.S_LOOP_REVERSE:
                 return (holder as LoopStatement).statements[index] as Statement;
             default:
@@ -73,6 +87,104 @@ export class StructogramController {
             i++;
         }
         return current as Statement ?? null;
+    }
+
+    /**
+     * Throws error if the there's no statement on the given mapping.
+     * @param mapping The mapping to a position
+     */
+    private ensureMappingValid(mapping: number[]): void {
+        if (mapping.length === 0) {
+            throw new Error("Mappings should have at least one element each!");
+        }
+        if (this.getElementByMapping(mapping) === null) {
+            throw new Error("Element not found!");
+        }
+    }
+
+    /**
+     * Sets Statement on the given position.
+     * @param mapping The position of the old Element
+     * @param newStatement The new Statement
+     * @throws When there's no statement on the given mapping
+     */
+    setElementByMapping(mapping: number[], newStatement: Statement): void {
+        let old = this.getElementByMapping(mapping)
+        if (old === null) {
+            throw new Error("Statement not found!");
+        }
+        old = newStatement;
+    }
+
+    /**
+     * Moves a statement, or an array of statement into a new location.
+     * 
+     * Note that the desired location should ba capable of holding multiple statements.
+     * 
+     * Direct indexing to an IfStatement or a SwitchStatement will fail, 
+     * beacuse the statetemt-block is not defined 
+     * (in this case, clarify which block you want to insert).
+     * @param from The mapping of the statement or an array of statement
+     * @param to The mapping of the desired location
+     */
+    moveToPosition(from: number[], to: number[]): void {
+        this.ensureMappingValid(from);
+        let tmpStatement = this.getElementByMapping(from) as Statement | Statement[];
+        let parentMapping = [...to];
+        let index = parentMapping.pop()!;
+        this.ensureMappingValid(parentMapping);
+        let parent: Statement[] | Statement | null = to.length == 0 ? this.structogram.statements : this.getElementByMapping(parentMapping);
+        if (parent === null) {
+            throw new Error("Target parent element not found!");
+        }
+        if (parent instanceof LoopStatement) {
+
+            return this.insertToPosition(parent.statements, tmpStatement, index);
+        }
+        if (Array.isArray(parent)) {
+            return this.insertToPosition(parent, tmpStatement, index);
+        }
+        throw new Error(`Statement type "${parent.type()} is not capable to hold elements directly!"`);
+    }
+
+    /**
+     * Inserts a statement item, or an array of statements into the given position.
+     * @param array An array of Statement
+     * @param statement A statement item or an array of statements
+     * @param index The desired position
+     */
+    private insertToPosition(array: Statement[], statement: Statement | Statement[], index: number): void {
+        if (array) {
+            if (index > array.length) {
+                index = -1;
+            }
+            if (Array.isArray(statement)) {
+                array.splice(index, 0, ...statement);
+                return;
+            }
+            array.splice(index, 0, statement);
+            return;
+        }
+    }
+
+    /**
+     * Swaps two statement on the given positions (only with statements).
+     * @param left mapping to the first element
+     * @param right mapping to the second element
+     * @throws When the mapping are invalid.
+     */
+    swapStatements(left: number[], right: number[]) {
+        this.ensureMappingValid(left);
+        this.ensureMappingValid(right);
+        let leftElement = this.getElementByMapping(left);
+        let rightElement = this.getElementByMapping(right);
+        if (rightElement instanceof Statement && leftElement instanceof Statement) {
+            let tmpStatement: Statement = deepCopy(leftElement);
+            this.setElementByMapping(left, rightElement);
+            this.setElementByMapping(right, tmpStatement);
+            return;
+        }
+        throw new Error("TypeError: One of the statements is an array!");
     }
 
     static fromJson(json: any): StructogramController {
