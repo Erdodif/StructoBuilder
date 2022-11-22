@@ -62,3 +62,152 @@ describe("Structogram toJson tests", () => {
     });
 
 });
+
+describe("Structogram set statement by mapping tests", () => {
+    let controller = StructogramController.fromJson(json);
+    it("should swap to proper position", () => {
+        controller.setElementByMapping([2], new Statement("A"));
+        assert.strictEqual(
+            (controller.getElementByMapping([2]) as Statement).content,
+            "A",
+            "Content mismatch after setting operation!"
+        );
+        controller.setElementByMapping([1], new LoopStatement("A", [new Statement(), new Statement("B")]));
+        assert.strictEqual(
+            (controller.getElementByMapping([1, 1]) as IfStatement).content,
+            "B",
+            "Content mismatch after nested setting operation!"
+        );
+    });
+
+});
+
+describe("Structogram swap tests", () => {
+    let controller = StructogramController.fromJson(json);
+    it("should swap to proper position", () => {
+        controller.swapStatements([2], [1, 2]);
+        assert.strictEqual(
+            (controller.getElementByMapping([2]) as Statement).content,
+            "j <= N",
+            "Content mismatch after swapping operation (from)!"
+        );
+        assert.strictEqual(
+            (controller.getElementByMapping([1, 2]) as IfStatement).content,
+            "KI: Metszet, Mdb",
+            "Content mismatch after swapping operation (to)!"
+        );
+    });
+
+});
+
+describe("Structogram insert into Position tests", () => {
+    let controller = StructogramController.fromJson(json);
+    it("should set statements on the first level properly", () => {
+        controller.setElementByMapping([2], new Statement("A"), true);
+        controller.setElementByMapping([2], new Statement("B"), true);
+        assert.strictEqual(
+            (controller.getElementByMapping([2]) as Statement).content,
+            "B",
+            "Content mismatch after inserting operation!"
+        );
+        assert.strictEqual(
+            (controller.getElementByMapping([3]) as Statement).content,
+            "A",
+            "Content mismatch after inserting operation!"
+        );
+    });
+
+    it("should set statements nested level correctly", () => {
+        controller.setElementByMapping([2], new Statement("A"), true);
+        controller.setElementByMapping([2], new Statement("B"), true);
+        controller.setElementByMapping([2], new LoopStatement("C", [new Statement(), new Statement("D")]));
+        assert.strictEqual(
+            (controller.getElementByMapping([2, 1]) as IfStatement).content,
+            "D",
+            "Content mismatch after nested inserting operation!"
+        );
+        assert.strictEqual(
+            (controller.getElementByMapping([3]) as IfStatement).content,
+            "A",
+            "Content mismatch after nested inserting operation!"
+        );
+        controller.setElementByMapping([2, 1], new Statement("B"), true);
+        assert.strictEqual(
+            (controller.getElementByMapping([2, 1]) as IfStatement).content,
+            "B",
+            "Content mismatch after nested inserting operation!"
+        );
+        assert.strictEqual(
+            (controller.getElementByMapping([2, 2]) as IfStatement).content,
+            "D",
+            "Content mismatch after nested inserting operation!"
+        );
+
+    });
+
+    it("should insert to the last element", () => {
+        controller.setElementByMapping([1, Infinity], new Statement("A"));
+        assert.strictEqual(
+            (controller.getElementByMapping([1]) as LoopStatement).statements[(controller.getElementByMapping([1]) as LoopStatement).statements.length - 1].content,
+            "A",
+            "Placement failed to last possible position!"
+        );
+    });
+});
+
+describe("Structogram remove on Position test", () => {
+    let controller = StructogramController.fromJson(json);
+    it("should remove statement properly", () => {
+        controller.setElementByMapping([2], new Statement("A"), true);
+        controller.setElementByMapping([2], new Statement("B"), true);
+        controller.setElementByMapping([2], null);
+        assert.strictEqual(
+            (controller.getElementByMapping([2]) as Statement).content,
+            "A",
+            "Content mismatch after inserting operation!"
+        );
+    });
+});
+
+describe("Structogram move to Position tests", () => {
+    let controller = StructogramController.fromJson(json);
+    it("should move Statements properly (simple)", () => {
+        controller.setElementByMapping([2], new Statement("A"), true);
+        controller.setElementByMapping([2], new Statement("B"), true);
+        controller.moveToPosition([3], [2], true);
+        assert.strictEqual(
+            (controller.getElementByMapping([2]) as Statement).content,
+            "A",
+            "Content mismatch after moving operation!"
+        );
+        assert.strictEqual(
+            (controller.getElementByMapping([3]) as Statement).content,
+            "B",
+            "Content mismatch after moving operation!"
+        );
+    });
+    it("should move Statements properly (with override)", () => {
+        controller.setElementByMapping([2], new Statement("A"), true);
+        controller.setElementByMapping([2], new Statement("B"), true);
+        controller.moveToPosition([3], [2]);
+        assert.strictEqual(
+            (controller.getElementByMapping([2]) as Statement).content,
+            "A",
+            "Content mismatch after moving operation!"
+        );
+        assert.notEqual(
+            (controller.getElementByMapping([3]) as Statement).content,
+            "B",
+            "Content mismatch after moving operation!"
+        );
+    });
+    it("should move Statements properly (to last position)", () => {
+        controller.setElementByMapping([2], new Statement("A"), true);
+        controller.moveToPosition([2], [Infinity]);
+        assert.strictEqual(
+            controller.structogram.statements[controller.structogram.statements.length - 1].content,
+            "A",
+            "Content mismatch after moving operation to the end!"
+        );
+    });
+});
